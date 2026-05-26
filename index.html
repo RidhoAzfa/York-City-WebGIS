@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Meta tags for SEO, mobile view, and PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="State-of-the-Art Interactive WebGIS for York City Tourism. Explore accommodations, historic sites, and restaurants.">
+    <meta name="theme-color" content="#ffffff">
+    <title>Discover York</title>
+    
+    <!-- Website Favicon -->
+    <link rel="icon" type="image/png" href="york_tourism_logo_v2.png">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Leaflet & Plugins CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Initial Loading Screen -->
+    <div id="loader" class="loader-overlay" role="alert" aria-live="assertive">
+        <div class="loader-content">
+            <img src="york_tourism_logo_v2.png" alt="Discover York Logo" class="loader-logo">
+            <h2 class="loader-text" id="loader-text">Loading Discover York...</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div class="progress-details">
+                <span id="progress-percentage">0%</span>
+                <span id="progress-text">Initializing Engine...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map" role="application" aria-label="Interactive Map of York City"></div>
+
+    <!-- Unified Top Header Bar -->
+    <header class="map-header glass-effect">
+        <button id="toggle-hub" class="hub-dock-btn" title="Toggle Command Deck" aria-label="Toggle Command Deck">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="header-branding">
+            <img src="york_tourism_logo_v2.png" class="logo-image" alt="York Tourism Logo">
+            <h1 class="map-title">Discover York</h1>
+            <div id="network-badge" class="network-badge glass-effect" title="Network Presence Status Indicator"><span class="network-dot"></span><span id="network-text">Live</span></div>
+        </div>
+        <div class="header-search-box">
+            <i class="fa-solid fa-magnifying-glass search-box-icon"></i>
+            <input type="text" id="location-search" class="search-input" placeholder="Search York..." aria-label="Search locations" autocomplete="off">
+            <div id="search-results" class="search-results glass-effect"></div>
+        </div>
+        <button id="quick-btn-chat" class="header-chat-btn" title="Ask York Guide AI" aria-label="Ask York Guide AI">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </button>
+    </header>
+
+    <!-- Unified Command Deck (Left Sidebar) -->
+    <aside id="control-hub" class="control-hub glass-effect collapsed" aria-label="Command Deck">
+        <div class="hub-header">
+            <div>
+                <h3><i class="fa-solid fa-compass" aria-hidden="true"></i> Command Deck</h3>
+                <p class="hub-subtitle">Interactive Spatial Explorer</p>
+            </div>
+            <button id="close-hub" class="icon-btn" title="Close Sidebar" aria-label="Close Sidebar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+
+        <!-- Segmented Tab Navigation -->
+        <div class="deck-tabs" role="tablist">
+            <div class="deck-tabs-indicator"></div>
+            <button class="deck-tab-btn active" data-tab="tab-explore" role="tab" aria-selected="true"><i class="fa-solid fa-compass"></i> Explore</button>
+            <button class="deck-tab-btn" data-tab="tab-directions" role="tab" aria-selected="false"><i class="fa-solid fa-route"></i> Directions</button>
+            <button class="deck-tab-btn" data-tab="tab-layers" role="tab" aria-selected="false"><i class="fa-solid fa-layer-group"></i> Layers & Tools</button>
+        </div>
+
+        <!-- Tab 1: Explore -->
+        <div id="tab-explore" class="deck-tab-content active" role="tabpanel">
+            <!-- LIVE WEATHER WIDGET -->
+            <div class="hub-section" style="padding-top:12px;">
+                <div class="section-title-row">
+                    <h4><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> York Live Weather</h4>
+                </div>
+                <div id="weather-widget-container" class="weather-widget-container">
+                    <!-- Gorgeous Shimmering Glassmorphic Skeleton Loader -->
+                    <div class="weather-skeleton">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div class="skeleton-line shimmer" style="width: 80px; height: 32px; border-radius: 8px;"></div>
+                                <div class="skeleton-line shimmer" style="width: 120px; height: 16px; border-radius: 4px;"></div>
+                                <div class="skeleton-line shimmer" style="width: 100px; height: 12px; border-radius: 4px;"></div>
+                            </div>
+                            <div class="skeleton-circle shimmer" style="width: 56px; height: 56px; border-radius: 50%;"></div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+                            <div class="skeleton-line shimmer" style="height: 42px; border-radius: 12px;"></div>
+                            <div class="skeleton-line shimmer" style="height: 42px; border-radius: 12px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Categories Grid -->
+            <div class="hub-section">
+                <div class="section-title-row">
+                    <h4><i class="fa-solid fa-tags"></i> Quick Categories</h4>
+                </div>
+                <div class="categories-grid">
+                    <button class="quick-cat-btn" data-category="Tourism" style="--cat-color: #e74c3c;">
+                        <i class="fa-solid fa-camera"></i> Attractions
+                    </button>
+                    <button class="quick-cat-btn" data-category="Historic" style="--cat-color: #8e44ad;">
+                        <i class="fa-solid fa-monument"></i> Historic
+                    </button>
+                    <button class="quick-cat-btn" data-category="Accomodation" style="--cat-color: #f39c12;">
+                        <i class="fa-solid fa-bed"></i> Hotels
+                    </button>
+                    <button class="quick-cat-btn" data-category="Restaurant" style="--cat-color: #d35400;">
+                        <i class="fa-solid fa-utensils"></i> Restaurants
+                    </button>
+                    <button class="quick-cat-btn" data-category="Parks" style="--cat-color: #22c55e;">
+                        <i class="fa-solid fa-tree"></i> Parks
+                    </button>
+                    <button class="quick-cat-btn" data-category="Shop" style="--cat-color: #3b82f6;">
+                        <i class="fa-solid fa-bag-shopping"></i> Shopping
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Directions (Structured to seamlessly match legacy JS selectors) -->
+        <div id="tab-directions" class="deck-tab-content" role="tabpanel">
+            <div class="hub-section" style="padding-top:12px;">
+                <div id="routing-panel" class="routing-deck-panel">
+                    <div class="routing-body" id="routing-body" style="padding:0; gap:12px; display:flex; flex-direction:column;">
+                        <div class="transport-modes">
+                            <button class="mode-btn active" data-mode="driving" title="Driving"><i class="fa-solid fa-car"></i></button>
+                            <button class="mode-btn" data-mode="cycling" title="Cycling"><i class="fa-solid fa-bicycle"></i></button>
+                            <button class="mode-btn" data-mode="walking" title="Walking"><i class="fa-solid fa-person-walking"></i></button>
+                        </div>
+
+                        <div class="routing-input-group">
+                            <i class="fa-regular fa-circle-dot input-icon start-icon"></i>
+                            <div class="input-wrapper">
+                                <input type="text" id="route-start" placeholder="Choose starting point..." autocomplete="off">
+                                <button id="btn-my-location" class="input-action-btn" title="Use My Location"><i class="fa-solid fa-location-crosshairs"></i></button>
+                                <button id="btn-pick-start" class="input-action-btn" title="Pick on Map"><i class="fa-solid fa-map-pin"></i></button>
+                                <div id="start-autocomplete" class="autocomplete-dropdown glass-effect"></div>
+                            </div>
+                        </div>
+
+                        <div class="routing-connector"></div>
+
+                        <div class="routing-input-group">
+                            <i class="fa-solid fa-location-dot input-icon end-icon"></i>
+                            <div class="input-wrapper">
+                                <input type="text" id="route-end" placeholder="Choose destination..." autocomplete="off">
+                                <button id="btn-pick-end" class="input-action-btn" title="Pick on Map"><i class="fa-solid fa-map-pin"></i></button>
+                                <div id="end-autocomplete" class="autocomplete-dropdown glass-effect"></div>
+                            </div>
+                        </div>
+
+                        <div class="routing-actions">
+                            <button id="btn-calc-route" class="calc-btn"><i class="fa-solid fa-diamond-turn-right"></i> Calculate Route</button>
+                            <button id="btn-clear-route" class="clear-btn" title="Clear Route"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+
+                        <div id="routing-alert" class="routing-alert hidden"></div>
+                    </div>
+                    
+                    <!-- Turn-by-Turn Panel inside sidebar tab content -->
+                    <div id="turn-by-turn-panel" class="turn-by-turn-panel collapsed" style="border-radius:14px; margin-top:12px; overflow:hidden;">
+                        <div class="tbt-header">
+                            <div class="tbt-summary">
+                                <span id="tbt-time" class="tbt-time">-- min</span>
+                                <span id="tbt-dist" class="tbt-dist">(-- km)</span>
+                            </div>
+                            <button id="toggle-tbt" class="icon-btn-small" style="display:none;"><i class="fa-solid fa-list"></i></button>
+                        </div>
+                        <div id="tbt-instructions-container" class="tbt-instructions-container">
+                            <ul id="tbt-instructions-list" class="tbt-list"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Layers & Tools -->
+        <div id="tab-layers" class="deck-tab-content" role="tabpanel">
+            <!-- Layers & Legends -->
+            <div class="hub-section" style="padding-top:12px;">
+                <div class="section-title-row">
+                    <h4><i class="fa-solid fa-layer-group" aria-hidden="true"></i> Layers & Legends</h4>
+                </div>
+                <div id="layers-legend-list" class="layers-legend-list" role="group" aria-label="Layers and Legends">
+                    <!-- Layer items dynamically generated -->
+                </div>
+            </div>
+
+            <!-- Spatial Buffer Tool -->
+            <div class="hub-section">
+                <div class="section-title-row">
+                    <h4><i class="fa-solid fa-circle-dot" aria-hidden="true"></i> Spatial Buffer Tool</h4>
+                </div>
+                <div class="buffer-controls">
+                    <div class="buffer-toggle-row" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <button id="btn-toggle-buffer" class="tool-btn" aria-label="Activate Buffer Tool" style="flex: 2;">
+                            <i class="fa-solid fa-bullseye"></i> Buffer Tool: Off
+                        </button>
+                        <button id="btn-clear-buffer" class="tool-btn hidden" aria-label="Clear Buffer" style="flex: 1;">
+                            <i class="fa-solid fa-trash-can"></i> Clear
+                        </button>
+                    </div>
+                    <div class="buffer-slider-group hidden" id="buffer-slider-group" style="margin-bottom: 12px;">
+                        <div class="slider-header" style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">
+                            <span>Radius:</span>
+                            <span id="buffer-radius-value" style="color: #2563eb; font-weight: 700;">150m</span>
+                        </div>
+                        <input type="range" id="buffer-radius-slider" min="50" max="500" step="25" value="150" class="premium-slider" style="width: 100%; cursor: pointer;">
+                    </div>
+                    <div id="buffer-stats-panel" class="buffer-stats-panel hidden">
+                        <!-- Stats dynamically populated -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Tools -->
+            <div class="hub-section">
+                <div class="section-title-row">
+                    <h4><i class="fa-solid fa-map" aria-hidden="true"></i> Map Tools</h4>
+                </div>
+                <div class="tools-container">
+                    <button id="toggle-boundary" class="tool-btn active" aria-label="Toggle Study Area Boundary" aria-pressed="true">
+                        <i class="fa-solid fa-draw-polygon" aria-hidden="true"></i> Boundary: On
+                    </button>
+                    <button id="toggle-graticule" class="tool-btn" aria-label="Toggle Latitude Longitude Grid">
+                        <i class="fa-solid fa-border-none" aria-hidden="true"></i> Graticule: Off
+                    </button>
+                    <button id="reset-view" class="tool-btn" aria-label="Reset Map View">
+                        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i> Reset View
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legacy JS compatibility placeholders (hidden silently) -->
+        <button id="toggle-routing" style="display:none;"></button>
+    </aside>
+
+    <!-- Mobile Sidebar Swipe Handle -->
+    <div id="mobile-handle" class="mobile-handle" role="button" tabindex="0" aria-label="Open Mobile Map Controls">
+        <div class="handle-bar"></div>
+        <span>Swipe Up for Controls</span>
+    </div>
+
+    <!-- Bottom-Left Credits & Data Sources -->
+    <div class="credits-container">
+        <div class="credit-icon-wrapper glass-effect" tabindex="0" aria-label="Credits and Data Source">
+            <i class="fa-solid fa-info" aria-hidden="true"></i>
+            <div class="credit-expand">
+                Data Source: OpenStreetMap | Date: 2026<br>
+                Developed by: Muhammad Ridho Azfa Karani
+            </div>
+        </div>
+    </div>
+
+    <!-- Top-Center Coordinate Display (Activated under graticule mode) -->
+    <div id="coord-display" class="coord-display glass-effect" aria-live="polite">
+        <i class="fa-solid fa-location-crosshairs" aria-hidden="true" style="color: #2563eb;"></i> 
+        <span id="coord-text">Lat: 0.00000 | Lng: 0.00000</span>
+    </div>
+
+    <!-- Floating Spotlight Filter Indicator -->
+    <div id="spotlight-alert" class="spotlight-alert glass-effect">
+        <div class="spotlight-alert-content">
+            <span class="spotlight-pulse-dot"></span>
+            <span id="spotlight-alert-text">Spotlight Mode: <strong>Tourism</strong> POIs only</span>
+        </div>
+        <button id="btn-reset-spotlight" class="spotlight-reset-btn">
+            <i class="fa-solid fa-rotate-left"></i> Restore All
+        </button>
+    </div>
+
+
+    <!-- CHAT TRIGGER PILL -->
+    <button id="btn-toggle-chat" class="chat-trigger-pill glass-effect" aria-label="Toggle Conversational AI Guide" title="Ask York Guide AI">
+        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true" style="margin-right: 6px; color: #2563eb;"></i> Ask York AI
+    </button>
+
+    <!-- CHAT WINDOW CONTAINER -->
+    <div id="chat-window" class="chat-window-container glass-effect">
+        <!-- Mobile Handle drag bar -->
+        <div class="chat-mobile-handle">
+            <div class="chat-mobile-handle-bar"></div>
+        </div>
+        <div class="chat-header">
+            <div class="chat-header-title">
+                <img src="york_tourism_logo_v2.png" alt="York Guide AI Logo" style="width: 28px; height: 28px; border-radius: 8px; object-fit: contain; box-shadow: 0 2px 6px rgba(0,0,0,0.12);">
+                <div>
+                    <span style="font-weight: 800; font-family: var(--font-display); font-size: 0.9rem; color: var(--text-primary);">York Guide AI</span>
+                    <span style="display: block; font-size: 0.65rem; color: var(--text-muted); font-weight: 600;">Conversational Tour Expert</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button id="btn-config-key" class="chat-header-action" title="Gemini API Key" aria-label="Configure API Key"><i class="fa-solid fa-key"></i></button>
+                <button id="btn-close-chat" class="chat-header-action" aria-label="Close Chat"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div id="chat-body" class="chat-body">
+            <div class="chat-bubble assistant">
+                Hello! I am your <strong>York Guide AI</strong>. Ask me anything about York's rich Roman, Viking, or Medieval history, or ask for local tourist recommendations!
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input-field" placeholder="Ask about Clifford's Tower, cafes, etc..." autocomplete="off">
+            <div id="chat-voice-waves" class="chat-voice-waves hidden">
+                <span class="wave-bar bar-1"></span>
+                <span class="wave-bar bar-2"></span>
+                <span class="wave-bar bar-3"></span>
+            </div>
+            <button id="btn-chat-mic" class="chat-mic-btn" title="Speak to York Guide AI"><i class="fa-solid fa-microphone"></i></button>
+            <button id="btn-send-message" class="chat-send-btn" disabled aria-label="Send Message"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- API KEY MODAL CONFIGURATION -->
+    <div id="modal-key-config" class="modal-overlay hidden">
+        <div class="modal-card glass-effect">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:1.1rem; font-family:var(--font-display); font-weight:800; color:var(--text-primary); display:flex; align-items:center;"><i class="fa-solid fa-key" style="color: #2563eb; margin-right: 8px;"></i> Gemini API Key</h3>
+                <button id="btn-close-modal" class="chat-header-action"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px; margin-top:0;">
+                    This conversational AI runs entirely client-side. Please provide a **Gemini API Key** from Google AI Studio to start chat. Your key is stored securely in local browser memory.
+                </p>
+                <input type="password" id="api-key-input" class="modal-input" placeholder="AIzaSy..." autocomplete="off" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:8px; border:1px solid rgba(15,23,42,0.15); outline:none; background:rgba(255,255,255,0.5); font-family:var(--font-sans); font-size:0.85rem;">
+                <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;">
+                    <button id="btn-clear-key" class="modal-btn secondary" style="background:transparent; border:1px solid rgba(15,23,42,0.15); padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer; color:var(--text-secondary); font-family:var(--font-sans); font-size:0.8rem;">Clear Key</button>
+                    <button id="btn-save-key" class="modal-btn primary" style="background:#2563eb; border:none; padding:8px 16px; border-radius:8px; font-weight:600; cursor:pointer; color:white; font-family:var(--font-sans); font-size:0.8rem; box-shadow:0 4px 10px rgba(37,99,235,0.2);">Save Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom-Center Branding MUST REMAIN INTACT -->
+    <div class="student-id-pill glass-effect" aria-label="Developer Information">
+        <a href="https://www.instagram.com/raaaaphaell" target="_blank" rel="noopener noreferrer" class="hover-up-link">Muhammad Ridho Azfa Karani</a> | 
+        <a href="https://bakrie.ac.id/" target="_blank" rel="noopener noreferrer" class="hover-up-link">NIM: 1232002053</a>
+    </div>
+
+    <!-- Bottom-Right North Arrow (Inline Breathtaking SVG) -->
+    <div class="north-arrow-container">
+        <svg viewBox="0 0 100 100" width="48" height="66" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3));" aria-label="North Arrow" role="img">
+            <circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.85)" stroke="#e2e8f0" stroke-width="2" />
+            <circle cx="50" cy="50" r="34" fill="none" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 4" />
+            <text x="50" y="24" font-family="var(--font-sans)" font-size="14" font-weight="800" fill="#1e293b" text-anchor="middle">N</text>
+            <path d="M50 25 L59 50 L50 45 L41 50 Z" fill="#2563eb" />
+            <path d="M50 25 L59 50 L50 45 Z" fill="#1d4ed8" />
+            <path d="M50 75 L59 50 L50 45 L41 50 Z" fill="#e2e8f0" />
+            <path d="M50 75 L59 50 L50 45 Z" fill="#cbd5e1" />
+            <circle cx="50" cy="48" r="4" fill="#1e293b" />
+        </svg>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+    <script src="https://unpkg.com/leaflet.latlng-graticule@1.2.2/leaflet.latlng-graticule.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script src="script.js"></script>
+    <div id="offline-toast" class="offline-toast glass-effect" role="alert">
+        <i class="fa-solid fa-wifi" style="margin-right:8px; color:#f59e0b;"></i>
+        <span>Offline Mode Active. Serving 6,283 features from offline IndexedDB Cache.</span>
+    </div>
+</body>
+</html>

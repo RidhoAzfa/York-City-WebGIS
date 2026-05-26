@@ -1,0 +1,16 @@
+{
+  "name": "York City Tourist Explorer",
+  "short_name": "York Explorer",
+  "description": "Award-Winning Interactive WebGIS for York City Tourism",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iI2ZmZiIgc3Ryb2tlPSIjY2JkNWUxIiBzdHJva2Utd2lkdGg9IjIiIC8+PHBhdGggZD0iTTUwIDI1IEw2MCA1MCBMMTAgNDUgTDQwIDUwIFoiIGZpbGw9IiNmYmJmMjQiIC8+PC9zdmc+",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}
